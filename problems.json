@@ -1,0 +1,12 @@
+[
+  { "topic": "Arrays", "problem": "Two Sum" },
+  { "topic": "Sliding Window", "problem": "Longest Substring Without Repeating Characters" },
+  { "topic": "Stack", "problem": "Valid Parentheses" },
+  { "topic": "Intervals", "problem": "Merge Intervals" },
+  { "topic": "Trees", "problem": "Binary Tree Level Order Traversal" },
+  { "topic": "Graphs", "problem": "Number of Islands" },
+  { "topic": "Dynamic Programming", "problem": "Climbing Stairs" },
+  { "topic": "Greedy", "problem": "Jump Game" },
+  { "topic": "Two Pointers", "problem": "Container With Most Water" },
+  { "topic": "Binary Search", "problem": "Search in Rotated Sorted Array" }
+]

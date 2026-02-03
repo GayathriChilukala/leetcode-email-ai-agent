@@ -1,0 +1,37 @@
+name: Daily DSA Email Agent
+
+on:
+  schedule:
+    - cron: '0 14 * * *'   # 9 AM EST
+  workflow_dispatch:
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Agent
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node agent.js
+
+      - name: Commit Progress
+        run: |
+          git config --global user.name "DSA Agent"
+          git config --global user.email "agent@github.com"
+          git add progress.json
+          git commit -m "Update progress"
+          git push

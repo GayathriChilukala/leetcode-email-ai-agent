@@ -8,12 +8,14 @@ dotenv.config();
 const EMAIL = process.env.EMAIL_USER;
 const PASS = process.env.EMAIL_PASS;
 
-const progress = JSON.parse(fs.readFileSync("progress.json"));
+// ⭐ Use your custom secret token
+const token = process.env.MODELS_API_KEY;
 
-const token = process.env.GITHUB_TOKEN;
 const endpoint = "https://models.github.ai/inference";
 
-// ⭐ Topic rotation list (hidden from user)
+const progress = JSON.parse(fs.readFileSync("progress.json"));
+
+// Hidden internal topic rotation
 const topics = [
   "Arrays",
   "Sliding Window",
@@ -27,8 +29,6 @@ const topics = [
   "Intervals"
 ];
 
-// -----------------------------
-// Pick 2 Topics Daily
 // -----------------------------
 function getTwoTopics() {
 
@@ -44,8 +44,6 @@ function getTwoTopics() {
 }
 
 // -----------------------------
-// AI Question Generator
-// -----------------------------
 async function generateQuestion(topic) {
 
   const client = new OpenAI({
@@ -59,14 +57,12 @@ Generate a LeetCode-style coding interview problem.
 Internal Topic: ${topic}
 
 STRICT RULES:
-- Do NOT mention the topic name
-- Do NOT hint which algorithm to use
-- Make it realistic and interview quality
+- Do NOT mention the topic
+- Do NOT give solution
 - Include title
 - Include description
 - Include constraints
 - Include example input/output
-- Do NOT include solution
 `;
 
   const response = await client.chat.completions.create({
@@ -77,8 +73,6 @@ STRICT RULES:
   return response.choices[0].message.content;
 }
 
-// -----------------------------
-// Email Sender
 // -----------------------------
 async function sendEmail(q1, q2) {
 
@@ -102,11 +96,8 @@ ${q2}
 
 ---------------------------------
 
-Reply to this email with:
-
-👉 Which data structure or algorithm pattern would you apply?
-
-Do NOT write code. Just concept.
+Reply with:
+Which data structure or pattern you would apply?
 `;
 
   await transporter.sendMail({
@@ -117,8 +108,6 @@ Do NOT write code. Just concept.
   });
 }
 
-// -----------------------------
-// Main Agent
 // -----------------------------
 async function main() {
 

@@ -5,17 +5,20 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// -----------------------------
+// Environment Variables
+// -----------------------------
 const EMAIL = process.env.EMAIL_USER;
 const PASS = process.env.EMAIL_PASS;
+const API_KEY = process.env.OPENAI_API_KEY;
 
-// ⭐ Use your custom secret token
-const token = process.env.MODELS_API_KEY;
-
+// GitHub Models endpoint
 const endpoint = "https://models.github.ai/inference";
 
+// -----------------------------
 const progress = JSON.parse(fs.readFileSync("progress.json"));
 
-// Hidden internal topic rotation
+// Hidden topic rotation
 const topics = [
   "Arrays",
   "Sliding Window",
@@ -29,6 +32,16 @@ const topics = [
   "Intervals"
 ];
 
+// -----------------------------
+// OpenAI Client
+// -----------------------------
+const client = new OpenAI({
+  baseURL: endpoint,
+  apiKey: API_KEY
+});
+
+// -----------------------------
+// Pick 2 Topics
 // -----------------------------
 function getTwoTopics() {
 
@@ -44,12 +57,9 @@ function getTwoTopics() {
 }
 
 // -----------------------------
+// Generate AI Question
+// -----------------------------
 async function generateQuestion(topic) {
-
-  const client = new OpenAI({
-    baseURL: endpoint,
-    apiKey: token
-  });
 
   const prompt = `
 Generate a LeetCode-style coding interview problem.
@@ -57,10 +67,10 @@ Generate a LeetCode-style coding interview problem.
 Internal Topic: ${topic}
 
 STRICT RULES:
-- Do NOT mention the topic
+- Do NOT mention topic
 - Do NOT give solution
 - Include title
-- Include description
+- Include full description
 - Include constraints
 - Include example input/output
 `;
@@ -73,6 +83,8 @@ STRICT RULES:
   return response.choices[0].message.content;
 }
 
+// -----------------------------
+// Send Email
 // -----------------------------
 async function sendEmail(q1, q2) {
 
@@ -97,7 +109,9 @@ ${q2}
 ---------------------------------
 
 Reply with:
-Which data structure or pattern you would apply?
+👉 Which data structure or algorithm pattern would you apply?
+
+Do NOT write code. Only concept.
 `;
 
   await transporter.sendMail({
@@ -109,16 +123,22 @@ Which data structure or pattern you would apply?
 }
 
 // -----------------------------
+// Main Workflow
+// -----------------------------
 async function main() {
+
+  if (!API_KEY) {
+    throw new Error("Missing OPENAI_API_KEY");
+  }
 
   if (progress.day > 30) {
     console.log("Completed 30 day program 🎉");
     return;
   }
 
-  const [topic1, topic2] = getTwoTopics();
-
   console.log("Generating questions...");
+
+  const [topic1, topic2] = getTwoTopics();
 
   const q1 = await generateQuestion(topic1);
   const q2 = await generateQuestion(topic2);

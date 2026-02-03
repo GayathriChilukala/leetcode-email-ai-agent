@@ -70,7 +70,7 @@ STRICT RULES:
 `;
 
   const response = await client.chat.completions.create({
-    model: "openai/gpt-4o-mini",
+    model: "openai/gpt-4.1-mini",
     messages: [{ role: "user", content: prompt }]
   });
 

@@ -8,25 +8,78 @@ dotenv.config();
 const EMAIL = process.env.EMAIL_USER;
 const PASS = process.env.EMAIL_PASS;
 
-const problems = JSON.parse(fs.readFileSync("problems.json"));
 const progress = JSON.parse(fs.readFileSync("progress.json"));
 
 const token = process.env.GITHUB_TOKEN;
 const endpoint = "https://models.github.ai/inference";
 
-function getTwoQuestions() {
+// ⭐ Topic rotation list (hidden from user)
+const topics = [
+  "Arrays",
+  "Sliding Window",
+  "Stack",
+  "Trees",
+  "Graphs",
+  "Dynamic Programming",
+  "Greedy",
+  "Two Pointers",
+  "Binary Search",
+  "Intervals"
+];
+
+// -----------------------------
+// Pick 2 Topics Daily
+// -----------------------------
+function getTwoTopics() {
 
   const i = progress.index;
 
-  const q1 = problems[i % problems.length];
-  const q2 = problems[(i + 1) % problems.length];
+  const t1 = topics[i % topics.length];
+  const t2 = topics[(i + 1) % topics.length];
 
   progress.index += 2;
   fs.writeFileSync("progress.json", JSON.stringify(progress));
 
-  return [q1, q2];
+  return [t1, t2];
 }
 
+// -----------------------------
+// AI Question Generator
+// -----------------------------
+async function generateQuestion(topic) {
+
+  const client = new OpenAI({
+    baseURL: endpoint,
+    apiKey: token
+  });
+
+  const prompt = `
+Generate a LeetCode-style coding interview problem.
+
+Internal Topic: ${topic}
+
+STRICT RULES:
+- Do NOT mention the topic name
+- Do NOT hint which algorithm to use
+- Make it realistic and interview quality
+- Include title
+- Include description
+- Include constraints
+- Include example input/output
+- Do NOT include solution
+`;
+
+  const response = await client.chat.completions.create({
+    model: "openai/gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }]
+  });
+
+  return response.choices[0].message.content;
+}
+
+// -----------------------------
+// Email Sender
+// -----------------------------
 async function sendEmail(q1, q2) {
 
   const transporter = nodemailer.createTransport({
@@ -37,25 +90,36 @@ async function sendEmail(q1, q2) {
   const message = `
 Day ${progress.day} / 30
 
-Question 1:
-Topic: ${q1.topic}
-Problem: ${q1.problem}
+---------------------------------
 
-Question 2:
-Topic: ${q2.topic}
-Problem: ${q2.problem}
+QUESTION 1
+${q1}
 
-Reply with data structure or pattern you would use.
+---------------------------------
+
+QUESTION 2
+${q2}
+
+---------------------------------
+
+Reply to this email with:
+
+👉 Which data structure or algorithm pattern would you apply?
+
+Do NOT write code. Just concept.
 `;
 
   await transporter.sendMail({
     from: EMAIL,
     to: EMAIL,
-    subject: "📘 Daily DSA Challenge",
+    subject: "📘 Daily AI DSA Challenge",
     text: message
   });
 }
 
+// -----------------------------
+// Main Agent
+// -----------------------------
 async function main() {
 
   if (progress.day > 30) {
@@ -63,13 +127,19 @@ async function main() {
     return;
   }
 
-  const [q1, q2] = getTwoQuestions();
+  const [topic1, topic2] = getTwoTopics();
+
+  console.log("Generating questions...");
+
+  const q1 = await generateQuestion(topic1);
+  const q2 = await generateQuestion(topic2);
+
   await sendEmail(q1, q2);
 
   progress.day += 1;
   fs.writeFileSync("progress.json", JSON.stringify(progress));
 
-  console.log("Email Sent");
+  console.log("Email Sent ✅");
 }
 
 main();

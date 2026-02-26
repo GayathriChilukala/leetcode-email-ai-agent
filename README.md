@@ -3,7 +3,7 @@
 An AI-powered automation that sends daily LeetCode-style coding interview questions via email to help practice Data Structures and Algorithms.
 
 ---
-
+ 
 ## 🚀 What It Does
 
 - Sends **2 AI-generated coding questions daily**
